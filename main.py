@@ -1,3 +1,4 @@
+import os
 import subprocess
 from time import sleep
 
@@ -16,17 +17,36 @@ def save_file(file_name, identification, data):
 
 
 if __name__ == "__main__":
+    #os.system("gh auth login")
+    foundRepos = []
     for line in read_txt(words_txt):
         try:
-            # print("Comand: gh search code " + line.replace('\n', '') + " --owner=Hotmart-Org")
-            proc = subprocess.Popen(["gh search code " + line.replace('\n', '') + " --owner=Hotmart-Org"],
+            query = line.replace('\n', '')
+            proc = subprocess.Popen([f"gh search code {query} --owner=Hotmart-Org"],
                                     stdout=subprocess.PIPE, shell=True)
             (out, err) = proc.communicate()
             repos = str(out.decode("utf-8")).split('\n')
             if len(repos) > 1:
                 for repo in repos:
                     if len(str(repo)) > 1:
-                        print(str(repo).split(':')[0] + " => " + repo)
-            sleep(10)
+                        print(repo)
+                        filtered = list(filter(lambda _obj: _obj['repo'] == str(repo).split(':')[0], foundRepos))
+                        if len(filtered) > 0:
+                            filtered[0]['fileName'].append(str(repo).split(':')[1])
+                        else:
+                            obj = {
+                                'query': query,
+                                'repo': str(repo).split(':')[0],
+                                'fileName': [str(repo).split(':')[1]]
+                            }
+                            foundRepos.append(obj)
+            sleep(5)
         except Exception as e:
-            print(f"Erro: {e} -> " + line)
+            print(f"Error: {e} -> " + line)
+    print('-------------------------------------------')
+    for repo in foundRepos:
+        print("Query = "+repo['query'])
+        print("=> "+repo['repo'])
+        for file in repo['fileName']:
+            print("     => "+file)
+        print('-------------------------------------------')
